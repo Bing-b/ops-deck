@@ -17,6 +17,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { Check, Copy, X } from 'lucide-vue-next';
 import type { CardLanguage, ProjectCard } from '../../shared/types';
 import { CARD_LANGUAGE_OPTIONS } from '../utils/highlight';
+import UiSelect from './UiSelect.vue';
 
 const props = defineProps<{
   open: boolean;
@@ -214,13 +215,13 @@ async function submit() {
             type="text"
             class="field-input"
             style="flex: 1; font-weight: 600"
-            placeholder="输入卡片标题，例如：生产发布脚本 / Nginx 配置 / 服务器连接信息"
+            placeholder="输入卡片标题，例如：生产发布脚本 / Nginx 配置"
           />
-          <select v-model="language" class="field-select" style="width: 148px">
-            <option v-for="opt in CARD_LANGUAGE_OPTIONS" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
+          <UiSelect
+            v-model="language"
+            :options="CARD_LANGUAGE_OPTIONS"
+            style="width: 154px; flex-shrink: 0"
+          />
         </div>
 
         <div class="editor-shell">

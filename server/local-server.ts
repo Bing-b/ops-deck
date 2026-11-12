@@ -13,6 +13,8 @@ const MIME_TYPES: Record<string, string> = {
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
   '.woff': 'font/woff'
@@ -221,14 +223,27 @@ export async function startLocalServer(distDir: string, port = 5189): Promise<ht
     const reqPath = (req.url || '/').split('?')[0];
     const rel = reqPath === '/' ? 'index.html' : reqPath.replace(/^\/+/, '');
     let filePath = path.resolve(distDir, rel);
-    if (!filePath.startsWith(path.resolve(distDir)) || !fs.existsSync(filePath)) {
+    const insideDist = filePath.startsWith(path.resolve(distDir));
+    const exists = insideDist && fs.existsSync(filePath) && fs.statSync(filePath).isFile();
+
+    if (!exists) {
+      // Never fall back missing static assets (.js/.css/fonts/images) to index.html,
+      // otherwise stale cached HTML gets HTML with text/html MIME for module scripts -> blank screen.
+      if (rel.startsWith('assets/') || path.extname(rel)) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Not Found');
+        return;
+      }
       filePath = path.join(distDir, 'index.html');
     }
     try {
       const data = await fsp.readFile(filePath);
       const ext = path.extname(filePath).toLowerCase();
       res.writeHead(200, {
-        'Content-Type': MIME_TYPES[ext] || 'application/octet-stream'
+        'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
+        ...(ext === '.html'
+          ? { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+          : { 'Cache-Control': 'public, max-age=31536000, immutable' })
       });
       res.end(data);
     } catch {

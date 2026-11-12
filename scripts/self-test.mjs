@@ -80,7 +80,33 @@ try {
   assert.equal(initial.cards.length, 4);
 
   // 新建项目与脚本卡片增改删
-  const proj = await store.saveProject({ name: '订单中心', description: '核心交易服务' });
+  const proj = await store.saveProject({
+    name: '订单中心',
+    description: '核心交易服务',
+    repoUrl: 'https://git.local/order.git',
+    gitBranch: 'release/v2',
+    devIp: '10.10.2.15',
+    prodIp: '10.10.1.15'
+  });
+  assert.equal(proj.gitBranch, 'release/v2');
+  assert.equal(proj.devIp, '10.10.2.15');
+  assert.equal(proj.prodIp, '10.10.1.15');
+
+  // 编辑更新既有项目并再次读取，确保所有顶部字段完整落盘
+  await store.saveProject({
+    id: proj.id,
+    name: '订单中心-v2',
+    repoUrl: 'https://git.local/order-v2.git',
+    gitBranch: 'main',
+    devIp: '10.10.2.88',
+    prodIp: '10.10.1.88'
+  });
+  const afterEdit = await store.loadVault();
+  const reloadedProj = afterEdit.projects.find((p) => p.id === proj.id);
+  assert.equal(reloadedProj.name, '订单中心-v2');
+  assert.equal(reloadedProj.gitBranch, 'main');
+  assert.equal(reloadedProj.devIp, '10.10.2.88');
+  assert.equal(reloadedProj.prodIp, '10.10.1.88');
   const card = await store.saveCard({
     projectId: proj.id,
     title: '重启订单容器',
@@ -102,7 +128,7 @@ try {
   const zipPath = path.join(tmpBase, 'handover.zip');
   await store.exportHandoverZip({ projectId: proj.id, includeOfflineHtml: true }, zipPath);
   const importRes = await store.importHandoverZip(zipPath);
-  assert.equal(importRes.projectName, '订单中心');
+  assert.equal(importRes.projectName, '订单中心-v2');
   assert.equal(importRes.cardCount, 1);
 
   const snap = await store.createBackupSnapshot();

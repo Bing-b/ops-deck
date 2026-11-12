@@ -15,7 +15,9 @@ export interface Project {
   name: string;
   description: string;
   repoUrl: string;
-  localRepoPath: string;
+  gitBranch: string;
+  devIp: string;
+  prodIp: string;
   createdAt: string;
   updatedAt: string;
 }

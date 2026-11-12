@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import {
-  Archive,
   Check,
   Copy,
   Download,
   Edit3,
   FileCode2,
   FolderGit2,
-  FolderOpen,
-  HardDrive,
+  GitBranch,
   Moon,
   Plus,
   Search,
+  Settings,
   Sun,
   Trash2,
   Upload
@@ -23,6 +22,7 @@ import CommandPaletteModal, { type PaletteTarget } from './components/CommandPal
 import ConfirmModal from './components/ConfirmModal.vue';
 import ExportImportModal from './components/ExportImportModal.vue';
 import ProjectFormModal from './components/ProjectFormModal.vue';
+import SettingsModal from './components/SettingsModal.vue';
 import { highlightCodeHtml } from './utils/highlight';
 
 const hasBridge = ref(typeof window !== 'undefined' && Boolean(window.opsVault));
@@ -40,6 +40,7 @@ const selectedProjectId = ref<string>('');
 
 // Modals
 const paletteOpen = ref(false);
+const settingsOpen = ref(false);
 const projectModalOpen = ref(false);
 const editingProject = ref<Project | null>(null);
 const cardModalOpen = ref(false);
@@ -172,15 +173,15 @@ async function handleBackup() {
   }
 }
 
-async function openLocalPath(target: string) {
-  if (!ensureBridge()) return;
+async function openWorkspaceDir() {
+  if (!ensureBridge() || !vault.value.workspacePath) return;
   try {
-    const res = await window.opsVault.openPath(target);
+    const res = await window.opsVault.openPath(vault.value.workspacePath);
     if (!res.ok && res.error) {
       showToast(res.error, 'err');
     }
   } catch (err) {
-    showToast(err instanceof Error ? `打开路径失败：${err.message}` : '打开路径失败', 'err');
+    showToast(err instanceof Error ? `打开目录失败：${err.message}` : '打开目录失败', 'err');
   }
 }
 
@@ -260,6 +261,13 @@ function openEditCard(card: ProjectCard) {
 }
 
 async function onProjectSaved(proj: Project) {
+  const idx = vault.value.projects.findIndex((p) => p.id === proj.id);
+  if (idx >= 0) {
+    vault.value.projects[idx] = proj;
+  } else {
+    vault.value.projects.push(proj);
+  }
+  selectedProjectId.value = proj.id;
   await refreshVault(proj.id);
   showToast(`已保存项目「${proj.name}」`);
 }
@@ -308,10 +316,35 @@ onUnmounted(() => {
   <div class="app-shell">
     <!-- Top Instrument Bar -->
     <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark">OD</span>
-        <div>
-          <div class="brand-name">OpsDeck</div>
+      <div class="brand" aria-label="OpsDeck">
+        <svg
+          class="brand-mark"
+          viewBox="0 0 32 32"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path
+            d="M21.2 9.2A9.6 9.6 0 1 0 21.2 22.8"
+            stroke="currentColor"
+            stroke-width="3.2"
+            stroke-linecap="round"
+          />
+          <path
+            d="M12.5 21.5L25.5 7.5"
+            stroke="currentColor"
+            stroke-width="2.9"
+            stroke-linecap="round"
+          />
+          <path
+            d="M19.5 22L27.5 13.5"
+            stroke="var(--color-accent)"
+            stroke-width="2.9"
+            stroke-linecap="round"
+          />
+        </svg>
+        <div class="brand-lockup">
+          <div class="brand-name">Ops<span class="brand-name-deck">Deck</span></div>
           <div class="brand-sub">项目资料与脚本卡片</div>
         </div>
       </div>
@@ -323,29 +356,23 @@ onUnmounted(() => {
       </button>
 
       <div class="topbar-actions">
-        <button
-          type="button"
-          class="btn btn-sm"
-          :title="`当前本地工作区：${vault.workspacePath || '未挂载'}（点击切换目录）`"
-          @click="pickWorkspaceDir"
-        >
-          <HardDrive :size="13" />
-          <span class="ws-path mono">{{ vault.workspacePath || '选择工作区' }}</span>
-        </button>
-
         <button type="button" class="btn btn-sm" @click="transferMode = 'import'">
           <Upload :size="13" />
           导入交接包
         </button>
 
-        <button type="button" class="btn btn-sm" title="立即创建工作区快照" @click="handleBackup">
-          <Archive :size="13" />
-          快照备份
-        </button>
-
-        <button type="button" class="btn btn-icon" title="切换高对比亮色/暗黑模式" @click="toggleTheme">
+        <button type="button" class="btn btn-icon btn-sm" title="切换高对比亮色/暗黑模式" @click="toggleTheme">
           <Moon v-if="theme === 'light'" :size="15" />
           <Sun v-else :size="15" />
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-icon btn-sm"
+          title="数据与工作区设置"
+          @click="settingsOpen = true"
+        >
+          <Settings :size="15" />
         </button>
 
         <button type="button" class="btn btn-primary btn-sm" @click="openNewProject">
@@ -401,49 +428,106 @@ onUnmounted(() => {
         <template v-else>
           <!-- Project Header -->
           <section class="proj-header">
-            <div class="proj-title-block">
-              <div class="proj-title-row">
+            <div class="proj-header-top">
+              <div class="proj-title-block">
                 <h1 class="proj-title">{{ activeProject.name }}</h1>
-                <span class="badge mono">{{ activeProject.slug }}</span>
+                <p v-if="activeProject.description" class="proj-desc">
+                  {{ activeProject.description }}
+                </p>
               </div>
-              <p v-if="activeProject.description" class="proj-desc">
-                {{ activeProject.description }}
-              </p>
-              <div v-if="activeProject.repoUrl || activeProject.localRepoPath" class="proj-links mono">
-                <span v-if="activeProject.repoUrl">代码仓库：{{ activeProject.repoUrl }}</span>
+
+              <div class="proj-actions">
+                <button type="button" class="btn btn-primary btn-sm" @click="openNewCard">
+                  <Plus :size="14" />
+                  新增卡片
+                </button>
+                <button type="button" class="btn btn-sm" @click="transferMode = 'export'">
+                  <Download :size="14" />
+                  导出交接包
+                </button>
+                <button type="button" class="btn btn-sm" @click="openEditProject(activeProject)">
+                  <Edit3 :size="13" />
+                  编辑项目
+                </button>
                 <button
-                  v-if="activeProject.localRepoPath"
                   type="button"
-                  class="link-btn mono"
-                  @click="openLocalPath(activeProject.localRepoPath)"
+                  class="btn btn-danger btn-icon btn-sm"
+                  title="删除项目"
+                  @click="removeProject(activeProject)"
                 >
-                  <FolderOpen :size="12" />
-                  {{ activeProject.localRepoPath }}
+                  <Trash2 :size="13" />
                 </button>
               </div>
             </div>
 
-            <div class="proj-actions">
-              <button type="button" class="btn btn-primary btn-sm" @click="openNewCard">
-                <Plus :size="14" />
-                新增卡片
-              </button>
-              <button type="button" class="btn btn-sm" @click="transferMode = 'export'">
-                <Download :size="14" />
-                导出交接包
-              </button>
-              <button type="button" class="btn btn-sm" @click="openEditProject(activeProject)">
-                <Edit3 :size="13" />
-                编辑项目
-              </button>
-              <button
-                type="button"
-                class="btn btn-danger btn-sm"
-                title="删除项目"
-                @click="removeProject(activeProject)"
-              >
-                <Trash2 :size="13" />
-              </button>
+            <div class="spec-strip mono">
+              <div class="spec-cell">
+                <span class="meta-k">GIT REPOSITORY · 仓库与分支</span>
+                <div class="info-values">
+                  <template v-if="activeProject.repoUrl">
+                    <span class="meta-v">{{ activeProject.repoUrl }}</span>
+                    <button
+                      type="button"
+                      class="inline-copy"
+                      title="复制 Git 地址"
+                      @click="copyText(activeProject.repoUrl, 'Git 地址')"
+                    >
+                      <Copy :size="11" />
+                    </button>
+                  </template>
+                  <button
+                    v-else
+                    type="button"
+                    class="empty-val"
+                    @click="openEditProject(activeProject)"
+                  >
+                    地址未配置
+                  </button>
+                  <span class="sep">/</span>
+                  <span v-if="activeProject.gitBranch" class="branch-tag">
+                    <GitBranch :size="11" />
+                    {{ activeProject.gitBranch }}
+                  </span>
+                  <button
+                    v-else
+                    type="button"
+                    class="empty-val"
+                    @click="openEditProject(activeProject)"
+                  >
+                    分支未配置
+                  </button>
+                </div>
+              </div>
+
+              <div class="spec-cell">
+                <span class="meta-k">DEV · 开发环境</span>
+                <div class="info-values">
+                  <span v-if="activeProject.devIp" class="meta-v">{{ activeProject.devIp }}</span>
+                  <button
+                    v-else
+                    type="button"
+                    class="empty-val"
+                    @click="openEditProject(activeProject)"
+                  >
+                    未配置
+                  </button>
+                </div>
+              </div>
+
+              <div class="spec-cell">
+                <span class="meta-k">PROD · 生产环境</span>
+                <div class="info-values">
+                  <span v-if="activeProject.prodIp" class="meta-v">{{ activeProject.prodIp }}</span>
+                  <button
+                    v-else
+                    type="button"
+                    class="empty-val"
+                    @click="openEditProject(activeProject)"
+                  >
+                    未配置
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -472,18 +556,17 @@ onUnmounted(() => {
                   <div class="card-actions" @click.stop>
                     <button
                       type="button"
-                      class="btn btn-sm"
+                      class="btn btn-icon btn-sm"
                       :class="{ 'is-success': copiedCardId === card.id }"
-                      title="复制脚本内容"
+                      :title="copiedCardId === card.id ? '已复制' : '复制脚本内容'"
                       @click="copyText(card.content, card.title, card.id)"
                     >
-                      <Check v-if="copiedCardId === card.id" :size="12" />
-                      <Copy v-else :size="12" />
-                      {{ copiedCardId === card.id ? '已复制' : '复制' }}
+                      <Check v-if="copiedCardId === card.id" :size="13" />
+                      <Copy v-else :size="13" />
                     </button>
                     <button
                       type="button"
-                      class="btn btn-icon btn-danger"
+                      class="btn btn-icon btn-sm btn-danger"
                       title="删除卡片"
                       @click="removeCard(card)"
                     >
@@ -541,6 +624,15 @@ onUnmounted(() => {
       @imported="(msg) => { refreshVault(); showToast(msg); }"
     />
 
+    <SettingsModal
+      :open="settingsOpen"
+      :workspace-path="vault.workspacePath"
+      @close="settingsOpen = false"
+      @pick-workspace="pickWorkspaceDir"
+      @open-workspace-folder="openWorkspaceDir"
+      @backup="handleBackup"
+    />
+
     <ConfirmModal
       :open="confirmState.open"
       :title="confirmState.title"
@@ -563,58 +655,65 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--color-paper);
+  background: var(--color-paper-2);
 }
 
 .topbar {
-  height: 52px;
-  padding: 0 14px;
+  height: 54px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--color-rule);
-  background: var(--color-paper);
+  background: var(--color-toolbar);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   flex-shrink: 0;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   flex-shrink: 0;
 }
 
 .brand-mark {
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-pill);
-  background: var(--color-ink);
-  color: var(--color-paper);
-  font-family: var(--font-mono);
-  font-weight: 800;
-  font-size: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--color-ink);
+  flex-shrink: 0;
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
 }
 
 .brand-name {
-  font-weight: 800;
-  font-size: 14px;
-  line-height: 1.1;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+
+.brand-name-deck {
+  color: var(--color-accent);
+  font-weight: 700;
 }
 
 .brand-sub {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--color-ink-muted);
 }
 
 .search-trigger {
   flex: 1;
-  min-width: 150px;
+  min-width: 160px;
   max-width: 420px;
-  height: 32px;
-  padding: 0 10px;
+  height: 34px;
+  padding: 0 12px;
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-input);
   background: var(--color-paper-2);
@@ -624,10 +723,15 @@ onUnmounted(() => {
   gap: 8px;
   cursor: pointer;
   font-size: 12.5px;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
 
 .search-trigger:hover {
   border-color: var(--color-rule-strong);
+  background: var(--color-paper);
   color: var(--color-ink);
 }
 
@@ -640,11 +744,11 @@ onUnmounted(() => {
 }
 
 .kbd {
-  font-size: 11px;
-  padding: 1px 6px;
+  font-size: 10.5px;
+  padding: 2px 7px;
   border: 1px solid var(--color-rule);
-  border-radius: 4px;
-  background: var(--color-paper);
+  border-radius: 999px;
+  background: var(--color-paper-2);
   color: var(--color-ink-2);
   flex-shrink: 0;
 }
@@ -653,19 +757,12 @@ onUnmounted(() => {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
-.ws-path {
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 11.5px;
-}
-
 .bridge-banner {
-  padding: 9px 16px;
+  padding: 9px 18px;
   border-bottom: 1px solid var(--color-prod-border);
   background: var(--color-prod-bg);
   color: var(--color-prod);
@@ -689,50 +786,59 @@ onUnmounted(() => {
 }
 
 .rail-header {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--color-rule);
-  font-size: 11.5px;
+  padding: 14px 16px 8px;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.04em;
   color: var(--color-ink-muted);
 }
 
 .project-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 4px 10px 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .project-item {
   width: 100%;
   text-align: left;
-  padding: 10px 11px;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--color-rule);
+  padding: 10px 12px;
+  border-radius: var(--radius-input);
+  border: 1px solid transparent;
   border-left: 3px solid transparent;
-  background: var(--color-paper);
+  background: transparent;
   cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 
 .project-item:hover {
-  border-color: var(--color-rule-strong);
+  background: var(--color-paper-3);
 }
 
 .project-item.is-selected {
-  border-color: var(--color-rule-strong);
+  background: var(--color-accent-bg);
+  border-color: oklch(86% 0.05 264);
   border-left-color: var(--color-accent);
 }
 
+.project-item.is-selected .project-item-title {
+  color: var(--color-accent);
+}
+
 .project-item-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 13.5px;
+  letter-spacing: -0.01em;
 }
 
 .project-item-meta {
-  margin-top: 4px;
-  font-size: 11px;
+  margin-top: 3px;
+  font-size: 11.5px;
   color: var(--color-ink-muted);
 }
 
@@ -748,7 +854,7 @@ onUnmounted(() => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: var(--color-paper);
+  background: var(--color-paper-2);
 }
 
 .empty-stage {
@@ -762,57 +868,144 @@ onUnmounted(() => {
 }
 
 .proj-header {
-  padding: 16px 22px;
+  padding: 20px 28px 18px;
   border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.proj-header-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
 }
 
-.proj-title-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+.proj-title-block {
+  flex: 1;
+  min-width: 0;
 }
 
 .proj-title {
   margin: 0;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
 }
 
 .proj-desc {
-  margin: 5px 0 0;
-  font-size: 13px;
+  margin: 6px 0 0;
+  font-size: 13.5px;
   color: var(--color-ink-2);
+  line-height: 1.55;
 }
 
-.proj-links {
-  margin-top: 6px;
+.spec-strip {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr 1fr;
+  border: 1px solid var(--color-rule);
+  border-radius: 10px;
+  background: var(--color-paper-2);
+  overflow: hidden;
+}
+
+.spec-cell {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  font-size: 12px;
+  min-width: 0;
+  border-right: 1px solid var(--color-rule);
+}
+
+.spec-cell:last-child {
+  border-right: none;
+}
+
+@media (max-width: 1120px) {
+  .spec-strip {
+    grid-template-columns: 1fr;
+  }
+  .spec-cell {
+    border-right: none;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .spec-cell:last-child {
+    border-bottom: none;
+  }
+}
+
+.info-values {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 14px;
-  font-size: 11.5px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.meta-k {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-ink-muted);
+  letter-spacing: 0.03em;
+}
+
+.meta-v {
+  font-weight: 600;
+  color: var(--color-ink);
+  word-break: break-all;
+}
+
+.sep {
   color: var(--color-ink-muted);
 }
 
-.link-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.empty-val {
   border: none;
   background: transparent;
   padding: 0;
-  color: var(--color-accent);
-  cursor: pointer;
   font-size: 11.5px;
+  color: var(--color-ink-muted);
+  cursor: pointer;
 }
 
-.link-btn:hover {
+.empty-val:hover {
+  color: var(--color-accent);
   text-decoration: underline;
+}
+
+.branch-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent-bg);
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.inline-copy {
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper);
+  border-radius: 5px;
+  padding: 2px 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-ink-2);
+  box-shadow: var(--shadow-btn);
+}
+
+.inline-copy:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .proj-actions {
@@ -825,7 +1018,7 @@ onUnmounted(() => {
 .cards-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 18px 22px 48px;
+  padding: 20px 24px 48px;
   background: var(--color-paper-2);
 }
 
@@ -841,32 +1034,35 @@ onUnmounted(() => {
   color: var(--color-ink-muted);
 }
 
-/* Xiaohongshu-style responsive masonry waterfall */
+/* Xiaohongshu-style responsive masonry waterfall with Apple tactile cards */
 .masonry-waterfall {
   column-width: 320px;
-  column-gap: 14px;
+  column-gap: 16px;
 }
 
 .masonry-card {
   break-inside: avoid;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   min-height: 120px;
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-card);
   background: var(--color-paper);
-  padding: 12px 13px;
+  padding: 14px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: var(--shadow-card);
   transition:
-    border-color var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
 }
 
 .masonry-card:hover {
   border-color: var(--color-accent);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
 .card-head {
@@ -885,7 +1081,8 @@ onUnmounted(() => {
   margin: 0;
   font-size: 14px;
   font-weight: 700;
-  line-height: 1.35;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
   word-break: break-word;
 }
 
@@ -901,14 +1098,15 @@ onUnmounted(() => {
   min-height: 58px;
   max-height: 250px;
   overflow: hidden;
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-code);
   border: 1px solid var(--color-code-border);
   background: var(--color-code-bg);
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.04);
 }
 
 .code-preview {
   margin: 0;
-  padding: 10px 12px;
+  padding: 11px 13px;
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.58;
@@ -932,8 +1130,8 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 14px 10px 5px;
-  background: linear-gradient(to bottom, transparent, var(--color-code-bg) 55%);
+  padding: 14px 10px 6px;
+  background: linear-gradient(to bottom, transparent, var(--color-code-bg) 58%);
   color: var(--color-code-muted);
   font-size: 11px;
   text-align: right;
@@ -941,15 +1139,17 @@ onUnmounted(() => {
 
 .toast {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
-  padding: 10px 14px;
-  border-radius: var(--radius-input);
-  border: 1px solid var(--color-ink);
-  background: var(--color-ink);
-  color: var(--color-paper);
+  right: 22px;
+  bottom: 22px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid oklch(100% 0 0 / 0.12);
+  background: oklch(18% 0.014 256 / 0.94);
+  backdrop-filter: blur(12px);
+  color: #f8fafc;
   font-size: 13px;
   font-weight: 600;
+  box-shadow: var(--shadow-modal);
   z-index: 80;
   max-width: 520px;
   word-break: break-all;

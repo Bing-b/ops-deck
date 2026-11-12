@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue';
-import { FolderOpen, X } from 'lucide-vue-next';
+import { X } from 'lucide-vue-next';
 import type { Project } from '../../shared/types';
 
 const props = defineProps<{
@@ -21,7 +21,9 @@ const form = reactive({
   name: '',
   description: '',
   repoUrl: '',
-  localRepoPath: ''
+  gitBranch: '',
+  devIp: '',
+  prodIp: ''
 });
 
 watch(
@@ -33,19 +35,12 @@ watch(
     form.name = p?.name ?? '';
     form.description = p?.description ?? '';
     form.repoUrl = p?.repoUrl ?? '';
-    form.localRepoPath = p?.localRepoPath ?? '';
+    form.gitBranch = p?.gitBranch ?? '';
+    form.devIp = p?.devIp ?? '';
+    form.prodIp = p?.prodIp ?? '';
   },
   { immediate: true }
 );
-
-async function pickLocalRepo() {
-  try {
-    const dir = await window.opsVault.pickFolder();
-    if (dir) form.localRepoPath = dir;
-  } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : '选择文件夹失败';
-  }
-}
 
 async function submit() {
   errorMsg.value = '';
@@ -60,7 +55,9 @@ async function submit() {
       name: form.name.trim(),
       description: form.description,
       repoUrl: form.repoUrl,
-      localRepoPath: form.localRepoPath
+      gitBranch: form.gitBranch,
+      devIp: form.devIp,
+      prodIp: form.prodIp
     });
     emit('saved', saved);
     emit('close');
@@ -85,26 +82,36 @@ async function submit() {
       <div class="modal-body">
         <div class="form-row">
           <label class="field-label">项目名称 *</label>
-          <input v-model="form.name" class="field-input" placeholder="例如：核心网关 / 订单中台" />
+          <input v-model="form.name" class="field-input" placeholder="例如：核心网关 / 图平台" />
         </div>
+
         <div class="form-row">
-          <label class="field-label">项目说明</label>
-          <textarea v-model="form.description" class="field-textarea" placeholder="架构简述、负责人、关键注意事项..." />
+          <label class="field-label">说明</label>
+          <textarea v-model="form.description" class="field-textarea" placeholder="项目简介或关键注意事项..." />
         </div>
-        <div class="form-row">
-          <label class="field-label">Git 仓库地址</label>
-          <input v-model="form.repoUrl" class="field-input mono" placeholder="https://git.company.com/..." />
-        </div>
-        <div class="form-row">
-          <label class="field-label">本机代码目录（支持一键打开）</label>
-          <div style="display: flex; gap: 8px">
-            <input v-model="form.localRepoPath" class="field-input mono" placeholder="E:\codes\my-project" />
-            <button type="button" class="btn" @click="pickLocalRepo">
-              <FolderOpen :size="14" />
-              选择
-            </button>
+
+        <div class="git-row">
+          <div class="form-row">
+            <label class="field-label">Git 地址</label>
+            <input v-model="form.repoUrl" class="field-input mono" placeholder="https://git.company.com/team/app.git" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">分支</label>
+            <input v-model="form.gitBranch" class="field-input mono" placeholder="main / v5.7" />
           </div>
         </div>
+
+        <div class="two-col">
+          <div class="form-row">
+            <label class="field-label">Dev 环境</label>
+            <input v-model="form.devIp" class="field-input mono" placeholder="192.168.10.105" />
+          </div>
+          <div class="form-row">
+            <label class="field-label">生产环境</label>
+            <input v-model="form.prodIp" class="field-input mono" placeholder="192.168.10.21" />
+          </div>
+        </div>
+
         <div v-if="errorMsg" class="err-box">{{ errorMsg }}</div>
       </div>
 
@@ -131,6 +138,18 @@ async function submit() {
   color: var(--color-ink-2);
 }
 
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.git-row {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  gap: 10px;
+}
+
 .err-box {
   padding: 9px 12px;
   border: 1px solid var(--color-prod-border);
@@ -141,4 +160,3 @@ async function submit() {
   font-weight: 600;
 }
 </style>
-

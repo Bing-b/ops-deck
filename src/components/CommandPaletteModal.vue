@@ -44,7 +44,15 @@ const allItems = computed<PaletteTarget[]>(() => {
       projectName: p.name,
       title: p.name,
       subtitle: p.description || p.slug,
-      searchBlob: [p.name, p.slug, p.description, p.repoUrl].join(' ')
+      searchBlob: [
+        p.name,
+        p.slug,
+        p.description,
+        p.repoUrl,
+        p.gitBranch,
+        p.devIp,
+        p.prodIp
+      ].join(' ')
     });
   }
 

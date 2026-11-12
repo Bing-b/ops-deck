@@ -92,7 +92,9 @@ function normalizeLegacyBundle(raw: LegacyProjectBundle): ProjectBundleData {
     name: raw.project.name,
     description: raw.project.description || '',
     repoUrl: raw.project.repoUrl || '',
-    localRepoPath: raw.project.localRepoPath || '',
+    gitBranch: raw.project.gitBranch || '',
+    devIp: raw.project.devIp || '',
+    prodIp: raw.project.prodIp || '',
     createdAt: raw.project.createdAt,
     updatedAt: raw.project.updatedAt
   };
@@ -243,8 +245,10 @@ export class VaultStore {
       slug: 'gateway-core',
       name: '示例项目 · 核心网关服务',
       description: '点击任意卡片即可用高亮编辑器修改或复制，右上角「新增卡片」随时记录。',
-      repoUrl: 'https://git.internal.local/infra/gateway-core',
-      localRepoPath: '',
+      repoUrl: 'https://git.internal.local/infra/gateway-core.git',
+      gitBranch: 'main',
+      devIp: '192.168.10.105',
+      prodIp: '192.168.10.21',
       createdAt: now,
       updatedAt: now
     };
@@ -391,9 +395,11 @@ export class VaultStore {
         const updated: Project = {
           ...existing.project,
           name: input.name.trim(),
-          description: input.description ?? existing.project.description,
-          repoUrl: input.repoUrl ?? existing.project.repoUrl,
-          localRepoPath: input.localRepoPath ?? existing.project.localRepoPath,
+          description: input.description !== undefined ? input.description.trim() : existing.project.description,
+          repoUrl: input.repoUrl !== undefined ? input.repoUrl.trim() : existing.project.repoUrl,
+          gitBranch: input.gitBranch !== undefined ? input.gitBranch.trim() : existing.project.gitBranch,
+          devIp: input.devIp !== undefined ? input.devIp.trim() : existing.project.devIp,
+          prodIp: input.prodIp !== undefined ? input.prodIp.trim() : existing.project.prodIp,
           updatedAt: now
         };
         existing.project = updated;
@@ -414,7 +420,9 @@ export class VaultStore {
       name: input.name.trim(),
       description: input.description?.trim() ?? '',
       repoUrl: input.repoUrl?.trim() ?? '',
-      localRepoPath: input.localRepoPath?.trim() ?? '',
+      gitBranch: input.gitBranch?.trim() ?? '',
+      devIp: input.devIp?.trim() ?? '',
+      prodIp: input.prodIp?.trim() ?? '',
       createdAt: now,
       updatedAt: now
     };

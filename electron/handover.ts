@@ -18,8 +18,15 @@ export function buildProjectReadme(bundle: ProjectBundleData): string {
     lines.push('');
   }
   lines.push(`- **项目标识**: \`${project.slug}\``);
-  if (project.repoUrl) lines.push(`- **代码仓库**: ${project.repoUrl}`);
-  if (project.localRepoPath) lines.push(`- **本地代码路径**: \`${project.localRepoPath}\``);
+  if (project.repoUrl) {
+    lines.push(
+      `- **Git 仓库**: ${project.repoUrl}${project.gitBranch ? `（分支 \`${project.gitBranch}\`）` : ''}`
+    );
+  } else if (project.gitBranch) {
+    lines.push(`- **Git 分支**: \`${project.gitBranch}\``);
+  }
+  if (project.devIp) lines.push(`- **Dev 环境**: \`${project.devIp}\``);
+  if (project.prodIp) lines.push(`- **生产环境**: \`${project.prodIp}\``);
   lines.push(`- **导出时间**: ${new Date().toLocaleString('zh-CN', { hour12: false })}`);
   lines.push('');
 
@@ -80,7 +87,11 @@ export function buildOfflineHandoverHtml(bundle: ProjectBundleData): string {
   <main>
     <div style="border:1px solid var(--rule);border-radius:6px;padding:12px 16px;background:#fff">
       <div>${escapeHtml(project.description || '无项目说明')}</div>
-      <div style="margin-top:6px;font-size:12.5px;color:var(--ink-2)">仓库：${escapeHtml(project.repoUrl || '-')} · 本地路径：<code>${escapeHtml(project.localRepoPath || '-')}</code></div>
+      <div style="margin-top:6px;font-size:12.5px;color:var(--ink-2)">
+        Git：${escapeHtml(project.repoUrl || '-')}${project.gitBranch ? ` [分支: <code>${escapeHtml(project.gitBranch)}</code>]` : ''} ·
+        Dev 环境：<code>${escapeHtml(project.devIp || '-')}</code> ·
+        生产环境：<code>${escapeHtml(project.prodIp || '-')}</code>
+      </div>
     </div>
     <div id="grid" class="waterfall"></div>
   </main>

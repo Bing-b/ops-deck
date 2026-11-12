@@ -1,4 +1,4 @@
-/* Hallmark · genre: modern-minimal · theme: custom (high-contrast workbench) */
+/* Hallmark · genre: modern-minimal · theme: custom (DeepSeek Harness engineering showcase & console) */
 @font-face {
   font-family: "Noto Sans SC";
   src: url("../assets/fonts/NotoSansSC-Regular.woff2") format("woff2");
@@ -8,82 +8,119 @@
 }
 
 :root {
-  /* High-Contrast Light Workbench */
-  --color-paper: oklch(99% 0.002 250);
-  --color-paper-2: oklch(95.5% 0.004 250);
-  --color-paper-3: oklch(91.5% 0.007 252);
-  --color-ink: oklch(16% 0.015 258);
-  --color-ink-2: oklch(34% 0.015 258);
-  --color-ink-muted: oklch(50% 0.012 258);
-  --color-rule: oklch(80% 0.01 255);
-  --color-rule-strong: oklch(40% 0.015 258);
+  /* DeepSeek Clean Light Engineering Surfaces */
+  --color-paper: oklch(99.6% 0.001 250);        /* Crisp white cards & header (#FFFFFF-class) */
+  --color-paper-2: oklch(97.8% 0.003 250);      /* Ultra-light slate canvas (#F8FAFC) */
+  --color-paper-3: oklch(94.8% 0.006 252);      /* Subtle hover fill (#F1F5F9) */
+  --color-toolbar: oklch(99.6% 0.001 250 / 0.9);
 
-  --color-accent: oklch(50% 0.22 258);
-  --color-accent-hover: oklch(44% 0.22 258);
-  --color-accent-bg: oklch(95% 0.03 258);
-  --color-accent-ink: oklch(99% 0.002 250);
-  --color-focus: oklch(50% 0.22 258);
+  --color-ink: oklch(17% 0.02 258);             /* High-contrast slate (#0F172A) */
+  --color-ink-2: oklch(40% 0.018 256);          /* Secondary slate (#475569) */
+  --color-ink-muted: oklch(58% 0.014 256);      /* Muted caption (#94A3B8) */
 
-  --color-prod: oklch(52% 0.22 25);
-  --color-prod-bg: oklch(96% 0.03 25);
-  --color-prod-border: oklch(80% 0.09 25);
+  --color-rule: oklch(90.5% 0.007 252);         /* Crisp 1px hairline (#E2E8F0) */
+  --color-rule-strong: oklch(78% 0.014 254);    /* Hover hairline */
 
-  --color-test: oklch(46% 0.16 155);
-  --color-test-bg: oklch(95% 0.03 155);
-  --color-test-border: oklch(78% 0.08 155);
+  /* DeepSeek Electric Blue Signal Accent (#4D6BFE) */
+  --color-accent: oklch(57.5% 0.215 264);
+  --color-accent-hover: oklch(50.5% 0.215 264);
+  --color-accent-bg: oklch(95.5% 0.028 264);    /* #EEF2FF-class tint */
+  --color-accent-ink: oklch(99.5% 0.002 250);
+  --color-focus: oklch(57.5% 0.215 264);
 
-  --color-warn: oklch(56% 0.17 70);
-  --color-warn-bg: oklch(96% 0.04 75);
-  --color-warn-border: oklch(82% 0.09 75);
+  /* Refined Primary Button (Obsidian Ink, not loud blue) */
+  --color-btn-primary-bg: oklch(20% 0.022 258);
+  --color-btn-primary-hover: oklch(28% 0.024 258);
+  --color-btn-primary-ink: oklch(99% 0.002 250);
 
-  --color-code-bg: oklch(17% 0.014 260);
-  --color-code-border: oklch(30% 0.016 260);
-  --color-code-ink: oklch(94% 0.006 250);
-  --color-code-muted: oklch(68% 0.012 255);
+  /* Semantic Status Signals */
+  --color-prod: oklch(56% 0.21 25);
+  --color-prod-bg: oklch(96.5% 0.025 25);
+  --color-prod-border: oklch(84% 0.08 25);
 
-  --font-ui: "Noto Sans SC", "Space Grotesk", "Inter", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, "Noto Sans SC", "Courier New", monospace;
+  --color-test: oklch(50% 0.16 160);
+  --color-test-bg: oklch(95.5% 0.028 160);
+  --color-test-border: oklch(80% 0.07 160);
 
-  --radius-card: 6px;
-  --radius-input: 6px;
-  --radius-pill: 4px;
+  --color-warn: oklch(58% 0.16 70);
+  --color-warn-bg: oklch(96.5% 0.035 75);
+  --color-warn-border: oklch(84% 0.08 75);
+
+  /* Inverted Deep Terminal Surface (#0D1117) */
+  --color-code-bg: oklch(16.5% 0.016 258);
+  --color-code-border: oklch(26% 0.018 258);
+  --color-code-ink: oklch(93% 0.008 250);
+  --color-code-muted: oklch(64% 0.014 255);
+
+  /* Hairline-first Elevation */
+  --shadow-card: 0 1px 2px oklch(17% 0.02 258 / 0.03);
+  --shadow-card-hover: 0 6px 18px -4px oklch(17% 0.02 258 / 0.07);
+  --shadow-modal:
+    0 24px 56px -12px oklch(15% 0.025 258 / 0.22),
+    0 0 0 1px oklch(17% 0.02 258 / 0.06);
+  --shadow-btn: 0 1px 1px oklch(17% 0.02 258 / 0.03);
+
+  --font-ui: "Noto Sans SC", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, "Noto Sans SC", monospace;
+
+  --radius-card: 12px;
+  --radius-code: 8px;
+  --radius-input: 8px;
+  --radius-pill: 6px;
+  --radius-modal: 12px;
+
+  --control-h: 36px;
+  --control-h-sm: 30px;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-fast: 120ms;
-  --dur-base: 180ms;
+  --dur-fast: 130ms;
+  --dur-base: 190ms;
 }
 
 [data-theme="dark"] {
-  --color-paper: oklch(14% 0.012 258);
-  --color-paper-2: oklch(18% 0.014 258);
-  --color-paper-3: oklch(23% 0.016 258);
-  --color-ink: oklch(97% 0.003 250);
-  --color-ink-2: oklch(82% 0.008 252);
-  --color-ink-muted: oklch(64% 0.01 255);
-  --color-rule: oklch(32% 0.014 258);
-  --color-rule-strong: oklch(72% 0.01 255);
+  --color-paper: oklch(17.5% 0.016 258);        /* Elevated dark card (#111827-class) */
+  --color-paper-2: oklch(13% 0.014 258);        /* Deep canvas (#0B0F17-class) */
+  --color-paper-3: oklch(22.5% 0.018 258);      /* Hover surface */
+  --color-toolbar: oklch(15% 0.015 258 / 0.88);
 
-  --color-accent: oklch(68% 0.18 256);
-  --color-accent-hover: oklch(74% 0.17 256);
-  --color-accent-bg: oklch(24% 0.06 258);
-  --color-accent-ink: oklch(14% 0.012 258);
-  --color-focus: oklch(68% 0.18 256);
+  --color-ink: oklch(95.5% 0.005 250);
+  --color-ink-2: oklch(76% 0.012 252);
+  --color-ink-muted: oklch(58% 0.012 254);
 
-  --color-prod: oklch(68% 0.21 25);
-  --color-prod-bg: oklch(24% 0.06 25);
-  --color-prod-border: oklch(46% 0.13 25);
+  --color-rule: oklch(26% 0.016 258);
+  --color-rule-strong: oklch(40% 0.018 258);
 
-  --color-test: oklch(70% 0.16 155);
-  --color-test-bg: oklch(23% 0.05 155);
-  --color-test-border: oklch(45% 0.1 155);
+  --color-accent: oklch(65% 0.19 264);
+  --color-accent-hover: oklch(70% 0.18 264);
+  --color-accent-bg: oklch(24% 0.06 264);
+  --color-accent-ink: oklch(99% 0.002 250);
+  --color-focus: oklch(65% 0.19 264);
 
-  --color-warn: oklch(78% 0.16 75);
-  --color-warn-bg: oklch(25% 0.05 75);
-  --color-warn-border: oklch(48% 0.1 75);
+  --color-btn-primary-bg: oklch(93% 0.006 250);
+  --color-btn-primary-hover: oklch(86% 0.008 250);
+  --color-btn-primary-ink: oklch(14% 0.015 258);
 
-  --color-code-bg: oklch(11% 0.012 260);
-  --color-code-border: oklch(28% 0.016 260);
-  --color-code-ink: oklch(95% 0.006 250);
-  --color-code-muted: oklch(66% 0.012 255);
+  --color-prod: oklch(68% 0.19 25);
+  --color-prod-bg: oklch(24% 0.055 25);
+  --color-prod-border: oklch(44% 0.11 25);
+
+  --color-test: oklch(70% 0.15 160);
+  --color-test-bg: oklch(23% 0.045 160);
+  --color-test-border: oklch(44% 0.09 160);
+
+  --color-warn: oklch(78% 0.15 75);
+  --color-warn-bg: oklch(25% 0.045 75);
+  --color-warn-border: oklch(46% 0.09 75);
+
+  --color-code-bg: oklch(11.5% 0.014 258);
+  --color-code-border: oklch(24% 0.016 258);
+  --color-code-ink: oklch(94% 0.006 250);
+  --color-code-muted: oklch(62% 0.012 255);
+
+  --shadow-card: 0 1px 2px oklch(4% 0.01 258 / 0.3);
+  --shadow-card-hover: 0 8px 22px -4px oklch(4% 0.01 258 / 0.55);
+  --shadow-modal:
+    0 28px 64px -12px oklch(4% 0.01 258 / 0.72),
+    0 0 0 1px oklch(100% 0 0 / 0.07);
+  --shadow-btn: 0 1px 2px oklch(4% 0.01 258 / 0.25);
 }
-
