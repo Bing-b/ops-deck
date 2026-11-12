@@ -1,0 +1,89 @@
+/* Hallmark · genre: modern-minimal · theme: custom (high-contrast workbench) */
+@font-face {
+  font-family: "Noto Sans SC";
+  src: url("../assets/fonts/NotoSansSC-Regular.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* High-Contrast Light Workbench */
+  --color-paper: oklch(99% 0.002 250);
+  --color-paper-2: oklch(95.5% 0.004 250);
+  --color-paper-3: oklch(91.5% 0.007 252);
+  --color-ink: oklch(16% 0.015 258);
+  --color-ink-2: oklch(34% 0.015 258);
+  --color-ink-muted: oklch(50% 0.012 258);
+  --color-rule: oklch(80% 0.01 255);
+  --color-rule-strong: oklch(40% 0.015 258);
+
+  --color-accent: oklch(50% 0.22 258);
+  --color-accent-hover: oklch(44% 0.22 258);
+  --color-accent-bg: oklch(95% 0.03 258);
+  --color-accent-ink: oklch(99% 0.002 250);
+  --color-focus: oklch(50% 0.22 258);
+
+  --color-prod: oklch(52% 0.22 25);
+  --color-prod-bg: oklch(96% 0.03 25);
+  --color-prod-border: oklch(80% 0.09 25);
+
+  --color-test: oklch(46% 0.16 155);
+  --color-test-bg: oklch(95% 0.03 155);
+  --color-test-border: oklch(78% 0.08 155);
+
+  --color-warn: oklch(56% 0.17 70);
+  --color-warn-bg: oklch(96% 0.04 75);
+  --color-warn-border: oklch(82% 0.09 75);
+
+  --color-code-bg: oklch(17% 0.014 260);
+  --color-code-border: oklch(30% 0.016 260);
+  --color-code-ink: oklch(94% 0.006 250);
+  --color-code-muted: oklch(68% 0.012 255);
+
+  --font-ui: "Noto Sans SC", "Space Grotesk", "Inter", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, "Noto Sans SC", "Courier New", monospace;
+
+  --radius-card: 6px;
+  --radius-input: 6px;
+  --radius-pill: 4px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+}
+
+[data-theme="dark"] {
+  --color-paper: oklch(14% 0.012 258);
+  --color-paper-2: oklch(18% 0.014 258);
+  --color-paper-3: oklch(23% 0.016 258);
+  --color-ink: oklch(97% 0.003 250);
+  --color-ink-2: oklch(82% 0.008 252);
+  --color-ink-muted: oklch(64% 0.01 255);
+  --color-rule: oklch(32% 0.014 258);
+  --color-rule-strong: oklch(72% 0.01 255);
+
+  --color-accent: oklch(68% 0.18 256);
+  --color-accent-hover: oklch(74% 0.17 256);
+  --color-accent-bg: oklch(24% 0.06 258);
+  --color-accent-ink: oklch(14% 0.012 258);
+  --color-focus: oklch(68% 0.18 256);
+
+  --color-prod: oklch(68% 0.21 25);
+  --color-prod-bg: oklch(24% 0.06 25);
+  --color-prod-border: oklch(46% 0.13 25);
+
+  --color-test: oklch(70% 0.16 155);
+  --color-test-bg: oklch(23% 0.05 155);
+  --color-test-border: oklch(45% 0.1 155);
+
+  --color-warn: oklch(78% 0.16 75);
+  --color-warn-bg: oklch(25% 0.05 75);
+  --color-warn-border: oklch(48% 0.1 75);
+
+  --color-code-bg: oklch(11% 0.012 260);
+  --color-code-border: oklch(28% 0.016 260);
+  --color-code-ink: oklch(95% 0.006 250);
+  --color-code-muted: oklch(66% 0.012 255);
+}
+
