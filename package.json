@@ -11,6 +11,7 @@
     "serve": "node scripts/serve.mjs",
     "build:electron": "node scripts/build-electron.mjs",
     "build": "vite build && node scripts/build-electron.mjs",
+    "pack:win": "pnpm run build && electron-builder --win",
     "typecheck": "vue-tsc --noEmit",
     "test": "node scripts/self-test.mjs"
   },
@@ -39,9 +40,30 @@
     "@types/node": "^22.10.2",
     "@vitejs/plugin-vue": "^5.2.1",
     "electron": "^34.2.0",
+    "electron-builder": "^26.18.0",
     "esbuild": "^0.24.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
     "vue-tsc": "^2.2.0"
+  },
+  "build": {
+    "appId": "com.opsdeck.app",
+    "productName": "OpsDeck",
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "!node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "requestedExecutionLevel": "requireAdministrator"
+    }
   }
 }

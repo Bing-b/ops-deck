@@ -502,7 +502,17 @@ onUnmounted(() => {
               <div class="spec-cell">
                 <span class="meta-k">DEV · 开发环境</span>
                 <div class="info-values">
-                  <span v-if="activeProject.devIp" class="meta-v">{{ activeProject.devIp }}</span>
+                  <template v-if="activeProject.devIp">
+                    <span class="meta-v">{{ activeProject.devIp }}</span>
+                    <button
+                      type="button"
+                      class="inline-copy"
+                      title="复制开发环境 IP"
+                      @click="copyText(activeProject.devIp, '开发环境 IP')"
+                    >
+                      <Copy :size="11" />
+                    </button>
+                  </template>
                   <button
                     v-else
                     type="button"
@@ -517,7 +527,17 @@ onUnmounted(() => {
               <div class="spec-cell">
                 <span class="meta-k">PROD · 生产环境</span>
                 <div class="info-values">
-                  <span v-if="activeProject.prodIp" class="meta-v">{{ activeProject.prodIp }}</span>
+                  <template v-if="activeProject.prodIp">
+                    <span class="meta-v">{{ activeProject.prodIp }}</span>
+                    <button
+                      type="button"
+                      class="inline-copy"
+                      title="复制生产环境 IP"
+                      @click="copyText(activeProject.prodIp, '生产环境 IP')"
+                    >
+                      <Copy :size="11" />
+                    </button>
+                  </template>
                   <button
                     v-else
                     type="button"

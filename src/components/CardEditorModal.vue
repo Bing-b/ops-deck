@@ -198,7 +198,7 @@ async function submit() {
 </script>
 
 <template>
-  <div v-if="open" class="modal-backdrop" @click.self="emit('close')">
+  <div v-if="open" class="modal-backdrop">
     <div class="modal-panel editor-modal" role="dialog" aria-modal="true" aria-label="脚本卡片编辑器">
       <div class="modal-head">
         <h3 class="modal-title">{{ card ? '编辑卡片' : '新增卡片' }}</h3>

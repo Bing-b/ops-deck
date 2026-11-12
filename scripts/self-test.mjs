@@ -72,12 +72,12 @@ try {
   const html = highlightCodeHtml('# 部署脚本\nif [ -f ".env" ]; then echo "ok"; fi', 'bash');
   assert.ok(html.includes('hljs-'));
 
-  // 初始化并校验 4 张示例卡片
+  // 初始化空工作区校验（不再写入示例数据）
   const store = new VaultStore();
   await store.setWorkspacePath(workspaceDir);
   const initial = await store.loadVault();
-  assert.equal(initial.projects.length, 1);
-  assert.equal(initial.cards.length, 4);
+  assert.equal(initial.projects.length, 0);
+  assert.equal(initial.cards.length, 0);
 
   // 新建项目与脚本卡片增改删
   const proj = await store.saveProject({

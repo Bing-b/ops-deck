@@ -15,16 +15,40 @@ import { VaultStore } from './vault-store';
 
 const isSmokeCheck = process.argv.includes('--smoke-check');
 
+// Allow Chromium renderer/GPU processes to start in environments that restrict
+// sandbox (e.g. certain Windows accounts, AppLocker, Hypervisor restrictions).
+app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+
 let mainWindow: BrowserWindow | null = null;
 const store = new VaultStore();
 
+function logStartup(msg: string): void {
+  try {
+    const logDir = app.getPath('userData');
+    fs.mkdirSync(logDir, { recursive: true });
+    fs.appendFileSync(path.join(logDir, 'startup.log'), `[${new Date().toISOString()}] ${msg}\n`, 'utf8');
+  } catch {
+    // ignore
+  }
+}
+
+process.on('uncaughtException', (err) => {
+  logStartup(`uncaughtException: ${err?.stack || err}`);
+});
+
+process.on('unhandledRejection', (err) => {
+  logStartup(`unhandledRejection: ${err instanceof Error ? err.stack : String(err)}`);
+});
+
 function createWindow(): void {
+  logStartup('createWindow start');
   mainWindow = new BrowserWindow({
     width: 1360,
     height: 860,
     minWidth: 960,
     minHeight: 640,
-    show: false,
+    show: !isSmokeCheck,
     title: 'OpsDeck · 项目与脚本卡片工作台',
     backgroundColor: '#fafbfd',
     autoHideMenuBar: true,
@@ -39,6 +63,7 @@ function createWindow(): void {
   Menu.setApplicationMenu(null);
 
   mainWindow.once('ready-to-show', () => {
+    logStartup('ready-to-show');
     if (!isSmokeCheck) {
       mainWindow?.show();
       mainWindow?.focus();
@@ -186,9 +211,21 @@ function registerIpcHandlers(): void {
 }
 
 app.whenReady().then(async () => {
-  await store.init();
-  registerIpcHandlers();
-  createWindow();
+  logStartup(`whenReady isPackaged=${app.isPackaged} execPath=${process.execPath}`);
+  try {
+    await store.init();
+    logStartup('store.init ok');
+    registerIpcHandlers();
+    createWindow();
+  } catch (err) {
+    logStartup(`startup error: ${err instanceof Error ? err.stack || err.message : String(err)}`);
+    dialog.showErrorBox(
+      'OpsDeck 启动失败',
+      err instanceof Error ? err.stack || err.message : String(err)
+    );
+    app.quit();
+    return;
+  }
 
   if (isSmokeCheck && mainWindow) {
     mainWindow.webContents.once('did-finish-load', async () => {

@@ -114,7 +114,7 @@ export function createApiHandler(store: VaultStore) {
         sendJson(res, 200, { ok: true, mode: 'local-server' });
         return true;
       }
-
+      
       if (req.method === 'POST' && urlPath === '/api/export-handover') {
         const options = await readJson<ExportOptions>(req);
         const result = await store.buildHandoverZipBuffer(options);
