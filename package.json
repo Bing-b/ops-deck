@@ -10,7 +10,8 @@
     "start": "node scripts/start-electron.mjs",
     "serve": "node scripts/serve.mjs",
     "build:electron": "node scripts/build-electron.mjs",
-    "build": "vite build && node scripts/build-electron.mjs",
+    "build:icon": "node scripts/build-icon.mjs",
+    "build": "node scripts/build-icon.mjs && vite build && node scripts/build-electron.mjs",
     "pack:win": "pnpm run build && electron-builder --win",
     "typecheck": "vue-tsc --noEmit",
     "test": "node scripts/self-test.mjs"
@@ -60,6 +61,7 @@
       "package.json"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         "portable"
       ],

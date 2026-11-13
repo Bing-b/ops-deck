@@ -43,6 +43,9 @@ process.on('unhandledRejection', (err) => {
 
 function createWindow(): void {
   logStartup('createWindow start');
+  const iconPath = path.join(__dirname, '../dist/icon.png');
+  const winIcon = fs.existsSync(iconPath) ? iconPath : undefined;
+
   mainWindow = new BrowserWindow({
     width: 1360,
     height: 860,
@@ -52,6 +55,7 @@ function createWindow(): void {
     title: 'OpsDeck · 项目与脚本卡片工作台',
     backgroundColor: '#fafbfd',
     autoHideMenuBar: true,
+    icon: winIcon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
